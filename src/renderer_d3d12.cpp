@@ -6899,7 +6899,6 @@ namespace d3d12
 					currentSamplerStateIdx = kInvalidHandle;
 					currentProgram         = BGFX_INVALID_HANDLE;
 					currentState.clear();
-					currentState.m_scissor = !draw.m_scissor;
 					changedFlags = BGFX_STATE_MASK;
 					changedStencil = packStencil(BGFX_STENCIL_MASK, BGFX_STENCIL_MASK);
 					currentState.m_stateFlags = newFlags;
