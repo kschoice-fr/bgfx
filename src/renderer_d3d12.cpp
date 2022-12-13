@@ -6864,7 +6864,7 @@ namespace d3d12
 				}
 
 				const uint64_t newStencil = draw.m_stencil;
-				uint64_t changedStencil = (currentState.m_stencil ^ draw.m_stencil) & BGFX_STENCIL_FUNC_REF_MASK;
+				uint64_t changedStencil = (currentState.m_stencil ^ draw.m_stencil);
 				currentState.m_stencil = newStencil;
 
 				if (resetState)
