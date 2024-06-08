@@ -306,6 +306,14 @@ function exampleProjectDefaults()
 			"kernelx",
 		}
 
+	 configuration { "gdk" }
+		links {
+			"kernel32",
+		}
+		postbuildcommands {
+			"xcopy /s /y /i $(ProjectDir)..\\..\\..\\examples\\runtime $(LayoutDir)Image\\Loose"
+		}
+
 	configuration { "winstore*" }
 		removelinks {
 			"DelayImp",

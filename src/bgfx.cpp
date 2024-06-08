@@ -11,6 +11,9 @@
 #include <bx/mutex.h>
 
 #include "topology.h"
+#if BX_PLATFORM_XBOXONE
+#include <atomic>
+#endif // BX_PLATFORM_XBOXONE
 
 #if BX_PLATFORM_OSX || BX_PLATFORM_IOS || BX_PLATFORM_VISIONOS
 #	include <objc/message.h>
@@ -301,6 +304,12 @@ namespace bgfx
 	InternalData g_internalData;
 	PlatformData g_platformData;
 	bool g_platformDataChangedSinceReset = false;
+#if BX_PLATFORM_XBOXONE
+	std::atomic<bool> g_suspendRequested = false;
+	std::atomic<bool> g_suspendComplete = false;
+	std::atomic<bool> g_resumeRequested = false;
+	std::atomic<bool> g_resumeComplete = true;
+#endif // BX_PLATFORM_XBOXONE
 
 	static Handle::TypeName s_typeName[] =
 	{
@@ -2305,6 +2314,11 @@ namespace bgfx
 
 	uint32_t Context::frame(bool _capture)
 	{
+#if BX_PLATFORM_XBOXONE
+		if (bgfx::g_suspendComplete || bgfx::g_suspendRequested) {
+			return 0;
+		}
+#endif // BX_PLATFORM_XBOXONE
 		m_encoder[0].end(true);
 
 #if BGFX_CONFIG_MULTITHREADED
@@ -2446,6 +2460,34 @@ namespace bgfx
 			BGFX_PROFILER_SCOPE("bgfx/flip", 0xff2040ff);
 			flip();
 		}
+
+#if BX_PLATFORM_XBOXONE
+		if (!s_ctx->m_singleThreaded) {
+			if (m_rendererInitialized)
+			{
+				if (bgfx::g_suspendRequested)
+				{
+					m_renderCtx->suspend();
+					bgfx::g_suspendComplete = true;
+					bgfx::g_resumeRequested = false;
+					bgfx::g_resumeComplete = false;
+					// WARNING: calling thread will be
+					// blocked until resume is requested
+					// from other thread
+					while (!bgfx::g_resumeRequested)
+						bx::sleep(10);
+					m_renderCtx->resume();
+				}
+			}
+			if (bgfx::g_resumeRequested)
+			{
+				bgfx::g_suspendRequested = false;
+				bgfx::g_suspendComplete = false;
+				bgfx::g_resumeRequested = false;
+				bgfx::g_resumeComplete = true;
+			}
+		}
+#endif // BX_PLATFORM_XBOXONE
 
 		if (apiSemWait(_msecs) )
 		{
@@ -3636,6 +3678,7 @@ namespace bgfx
 			s_allocatorStub = NULL;
 		}
 
+                s_renderFrameCalled = false;
 		s_threadIndex = 0;
 		g_callback    = NULL;
 		g_allocator   = NULL;
@@ -5577,6 +5620,47 @@ namespace bgfx
 		BGFX_CHECK_API_THREAD();
 		s_ctx->requestScreenShot(_handle, _filePath);
 	}
+
+#if BX_PLATFORM_XBOXONE
+	void requestSuspend()
+	{
+		if (s_ctx->m_singleThreaded) {
+			// IMPORTANT: must be called from the same thread bgfx::init was called
+			s_ctx->m_renderCtx->suspend();
+			g_suspendRequested = false;
+			g_suspendComplete = true;
+		} else {
+			g_suspendRequested = true;
+			g_suspendComplete = false;
+		}
+		g_resumeRequested = false;
+		g_resumeComplete = false;
+	}
+
+	void requestResume()
+	{
+		if (s_ctx->m_singleThreaded) {
+			// IMPORTANT: must be called from the same thread bgfx::init was called
+			s_ctx->m_renderCtx->resume();
+			g_resumeRequested = false;
+			g_resumeComplete = true;
+			g_suspendRequested = false;
+			g_suspendComplete = false;
+		} else {
+			g_resumeRequested = true;
+			g_resumeComplete = false;
+		}
+	}
+
+	bool isSuspended()
+	{
+		return g_suspendComplete;
+	}
+	bool isResumed()
+	{
+		return g_resumeComplete;
+	}
+#endif // BX_PLATFORM_XBOXONE
 
 #undef BGFX_CHECK_ENCODER0
 
