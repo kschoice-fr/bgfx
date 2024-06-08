@@ -1418,7 +1418,7 @@ namespace d3d12
 				g_caps.limits.maxTextureSize     = D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION;
 				g_caps.limits.maxTextureLayers   = D3D12_REQ_TEXTURE2D_ARRAY_AXIS_DIMENSION;
 				g_caps.limits.maxFBAttachments   = bx::min<uint8_t>(16, BGFX_CONFIG_MAX_FRAME_BUFFER_ATTACHMENTS);
-				g_caps.limits.maxComputeBindings = bx::min(D3D12_UAV_SLOT_COUNT, BGFX_MAX_COMPUTE_BINDINGS);
+				g_caps.limits.maxComputeBindings = bx::min<uint32_t>(D3D12_UAV_SLOT_COUNT, BGFX_MAX_COMPUTE_BINDINGS);
 				g_caps.limits.maxVertexStreams   = BGFX_CONFIG_MAX_VERTEX_STREAMS;
 
 				for (uint32_t ii = 0; ii < TextureFormat::Count; ++ii)
@@ -5706,8 +5706,8 @@ namespace d3d12
 			bimg::imageDecodeToBgra8(g_allocator, temp, srcData, _rect.m_width, _rect.m_height, srcpitch, bimg::TextureFormat::Enum(m_requestedFormat));
 			srcData = temp;
 
-			box.right  = bx::max(1u, m_width  >> _mip);
-			box.bottom = bx::max(1u, m_height >> _mip);
+			box.right  = bx::max<uint32_t>(1u, m_width  >> _mip);
+			box.bottom = bx::max<uint32_t>(1u, m_height >> _mip);
 		}
 
 		D3D12_RESOURCE_DESC desc = getResourceDesc(m_ptr);

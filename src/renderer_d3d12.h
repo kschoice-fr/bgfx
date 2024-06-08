@@ -16,8 +16,18 @@
 #elif defined(BX_PLATFORM_XBOXONE)
 #   if defined(_GAMING_XBOX_SCARLETT)
 #      include <d3d12_xs.h>
+typedef struct D3D12_FEATURE_DATA_D3D12_OPTIONS15
+{
+	_Out_  BOOL TriangleFanSupported;
+	_Out_  BOOL DynamicIndexBufferStripCutSupported;
+} 	D3D12_FEATURE_DATA_D3D12_OPTIONS15;
 #   elif defined(_GAMING_XBOX_XBOXONE)
 #      include <d3d12_x.h>
+typedef struct D3D12_FEATURE_DATA_D3D12_OPTIONS15
+{
+	_Out_  BOOL TriangleFanSupported;
+	_Out_  BOOL DynamicIndexBufferStripCutSupported;
+} 	D3D12_FEATURE_DATA_D3D12_OPTIONS15;
 #   endif
 #   include <algorithm>
 #   include <assert.h>
@@ -82,7 +92,7 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 #include "dxgi.h"
 
 #if BGFX_CONFIG_DEBUG_ANNOTATION && !BX_PLATFORM_LINUX
-#	if BX_PLATFORM_WINDOWS || BX_PLATFORM_WINRT
+#	if BX_PLATFORM_WINDOWS || BX_PLATFORM_WINRT || BX_PLATFORM_XBOXONE
 typedef struct PIXEventsThreadInfo* (WINAPI* PFN_PIX_GET_THREAD_INFO)();
 typedef uint64_t                    (WINAPI* PFN_PIX_EVENTS_REPLACE_BLOCK)(bool _getEarliestTime);
 
